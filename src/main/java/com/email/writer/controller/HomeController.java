@@ -4,11 +4,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 public class HomeController {
 
     @GetMapping("/")
-    public ResponseEntity<String> home() {
-        return ResponseEntity.ok("Welcome to GmailGenie AI API! The server is live and ready to process email requests 🚀");
+    public ResponseEntity<Map<String, String>> home() {
+        return ResponseEntity.ok(Map.of(
+                "service", "GmailGenie API",
+                "status", "UP",
+                "version", "1.0.0",
+                "docs", "/api/email/generate"
+        ));
     }
 }

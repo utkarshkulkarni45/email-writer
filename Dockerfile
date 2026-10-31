@@ -1,25 +1,26 @@
-# Stage 1: Build the application
+# Stage 1: Build application
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy pom.xml and source code
 COPY pom.xml .
 COPY src ./src
 
-# Set Java release compatibility to 21 for production deployment container
-RUN sed -i 's/<java.version>25<\/java.version>/<java.version>21<\/java.version>/g' pom.xml
 RUN mvn clean package -DskipTests
 
-# Stage 2: Run the application
+# Stage 2: Minimal runtime image
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Copy the built jar from the build stage
-COPY --from=build /app/target/gmailgenie-ai-0.0.1-SNAPSHOT.jar app.jar
+# Run as non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 
-# Expose port (Render sets $PORT dynamically, default 8080)
+COPY --from=build --chown=appuser:appgroup /app/target/gmailgenie-ai-0.0.1-SNAPSHOT.jar app.jar
+
 EXPOSE 8080
 
-# Run Spring Boot app
-ENTRYPOINT ["sh", "-c", "java -jar -Dserver.port=${PORT:-8080} app.jar"]
+# Healthcheck to probe application status
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD wget -qO- http://localhost:${PORT:-8080}/actuator/health | grep -q "UP" || exit 1
 
+ENTRYPOINT ["sh", "-c", "java -jar -Dserver.port=${PORT:-8080} app.jar"]

@@ -50,8 +50,8 @@ function getEmailContentToReply() {
 }
 
 function injectButton() {
-  const existingButton = document.querySelector(".Genie-AI-Button");
-  if (existingButton) {
+  const existingContainer = document.querySelector(".genie-ai-container");
+  if (existingContainer) {
     return;
   }
 
@@ -63,19 +63,40 @@ function injectButton() {
     return;
   }
 
-  // Create Genie AI button
+  // Create container for button + tone dropdown
+  const container = document.createElement("div");
+  container.className = "genie-ai-container";
+
+  // Create tone selector dropdown
+  const toneSelect = document.createElement("select");
+  toneSelect.className = "genie-tone-select";
+  toneSelect.setAttribute("aria-label", "Select tone for reply");
+  toneSelect.innerHTML = `
+    <option value="professional">Professional</option>
+    <option value="friendly">Friendly</option>
+    <option value="casual">Casual</option>
+    <option value="persuasive">Persuasive</option>
+    <option value="urgent">Urgent</option>
+  `;
+
+  // Create action button
   const button = document.createElement("button");
-  button.textContent = "Genie AI ⭐";
+  button.textContent = "Generate Reply";
   button.className = "Genie-AI-Button";
   button.setAttribute("type", "button");
 
-  toolbar.appendChild(button);
+  container.appendChild(toneSelect);
+  container.appendChild(button);
+  toolbar.appendChild(container);
 
   button.addEventListener("click", async (e) => {
     e.preventDefault();
+    const selectedTone = toneSelect.value || "professional";
+
     try {
       button.textContent = "Generating...";
       button.disabled = true;
+      toneSelect.disabled = true;
 
       // Find Gmail compose editable box
       const composeBox =
@@ -89,32 +110,48 @@ function injectButton() {
       // Extract the email content to reply to
       const emailContent = getEmailContentToReply();
 
-      console.log("Extracted Email Content for Genie AI:", emailContent);
-
       if (!emailContent) {
-        throw new Error("Could not find email message to reply to. Please type some brief notes in the reply box.");
+        throw new Error("No incoming message found. Please type a few bullet points in the compose box to reply.");
       }
 
-      // Call Spring Boot backend (Live Render Deployment)
+      if (emailContent.length > 5000) {
+        throw new Error("Email content exceeds 5000 characters. Please shorten it before generating.");
+      }
+
+      // Call Spring Boot backend (Render Deployment with timeout)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout for cold start
+
       const response = await fetch("https://gmailgenie-ai.onrender.com/api/email/generate", {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           emailContent: emailContent,
-          tone: "professional",
+          tone: selectedTone,
         }),
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`Failed to generate email reply (Status: ${response.status})`);
+        let errorMsg = `Server returned ${response.status}`;
+        try {
+          const errData = await response.json();
+          errorMsg = errData.message || errorMsg;
+        } catch {
+          const text = await response.text();
+          if (text) errorMsg = text;
+        }
+        throw new Error(errorMsg);
       }
 
       const generatedReply = await response.text();
 
       if (!generatedReply || !generatedReply.trim()) {
-        throw new Error("Backend returned an empty reply");
+        throw new Error("Received an empty response from server.");
       }
 
       // Insert AI generated response into Gmail compose box
@@ -129,14 +166,16 @@ function injectButton() {
           data: generatedReply,
         })
       );
-
-      console.log("AI reply successfully injected into Gmail.");
     } catch (error) {
-      console.error("Genie AI Error:", error);
-      alert("Genie AI: " + error.message);
+      if (error.name === "AbortError") {
+        alert("Request timed out. The free backend server is waking up from sleep. Please try again in 15 seconds.");
+      } else {
+        alert("GmailGenie: " + error.message);
+      }
     } finally {
-      button.textContent = "Genie AI ⭐";
+      button.textContent = "Generate Reply";
       button.disabled = false;
+      toneSelect.disabled = false;
     }
   });
 }
