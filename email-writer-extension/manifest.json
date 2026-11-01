@@ -2,9 +2,7 @@
   "manifest_version": 3,
   "name": "GmailGenie AI",
   "version": "1.0.0",
-  "description": "AI Powered Email Writer Extension for Gmail",
-
-  "permissions": ["activeTab", "storage"],
+  "description": "Draft context-aware replies inside Gmail with Google Gemini",
 
   "host_permissions": [
     "https://gmailgenie-ai.onrender.com/*",

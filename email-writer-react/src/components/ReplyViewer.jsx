@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Box, Typography, Paper, Button, Snackbar, Alert, Fade } from "@mui/material";
+import { Box, Typography, Paper, Button, Snackbar, Alert, Fade, Chip } from "@mui/material";
 
-export default function ReplyViewer({ reply }) {
+export default function ReplyViewer({ reply, modelUsed }) {
   const [copied, setCopied] = useState(false);
 
   if (!reply) return null;
@@ -15,9 +15,14 @@ export default function ReplyViewer({ reply }) {
     <Fade in={Boolean(reply)} timeout={400}>
       <Box sx={{ mt: 5 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
-          <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ fontSize: "1.1rem" }}>
-            Generated Response
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ fontSize: "1.1rem" }}>
+              Generated Response
+            </Typography>
+            {modelUsed && (
+              <Chip label={modelUsed} size="small" variant="outlined" sx={{ color: "#475569" }} />
+            )}
+          </Box>
           <Button
             variant="outlined"
             size="small"
@@ -31,7 +36,7 @@ export default function ReplyViewer({ reply }) {
               },
             }}
           >
-            📋 Copy Response
+            Copy
           </Button>
         </Box>
 

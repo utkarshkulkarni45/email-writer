@@ -120,7 +120,7 @@ function injectButton() {
 
       // Call Spring Boot backend (Render Deployment with timeout)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout for cold start
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // Render free tier can take ~30s to wake up
 
       const response = await fetch("https://gmailgenie-ai.onrender.com/api/email/generate", {
         method: "POST",
@@ -168,7 +168,7 @@ function injectButton() {
       );
     } catch (error) {
       if (error.name === "AbortError") {
-        alert("Request timed out. The free backend server is waking up from sleep. Please try again in 15 seconds.");
+        alert("Request timed out. The free backend server is waking up from sleep. Please click Generate Reply again in 15 seconds.");
       } else {
         alert("GmailGenie: " + error.message);
       }

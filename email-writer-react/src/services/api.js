@@ -3,7 +3,7 @@ const API_BASE_URL =
 
 export const generateEmailReply = async (emailContent, tone) => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s for free tier wake up
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // free tier can take ~30s to wake up
 
   try {
     const response = await fetch(`${API_BASE_URL}/generate`, {
@@ -18,8 +18,6 @@ export const generateEmailReply = async (emailContent, tone) => {
       }),
     });
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
       let errorMsg = `Server error (${response.status})`;
       try {
@@ -32,9 +30,11 @@ export const generateEmailReply = async (emailContent, tone) => {
       throw new Error(errorMsg);
     }
 
-    return await response.text();
-  } catch (error) {
+    return {
+      reply: await response.text(),
+      modelUsed: response.headers.get("X-Model-Used"),
+    };
+  } finally {
     clearTimeout(timeoutId);
-    throw error;
   }
 };

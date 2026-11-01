@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ThemeProvider,
   createTheme,
   Container,
   Typography,
   Alert,
+  Button,
   Paper,
   Box,
   CssBaseline,
@@ -54,26 +55,36 @@ function App() {
   const [emailContent, setEmailContent] = useState("");
   const [tone, setTone] = useState("professional");
   const [generatedReply, setGeneratedReply] = useState("");
+  const [modelUsed, setModelUsed] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const runGeneration = useCallback(async () => {
+    if (loading || !emailContent.trim()) return;
+
     setLoading(true);
     setError("");
 
     try {
-      const reply = await generateEmailReply(emailContent, tone);
-      setGeneratedReply(reply);
+      const result = await generateEmailReply(emailContent, tone);
+      setGeneratedReply(result.reply);
+      setModelUsed(result.modelUsed || "");
     } catch (err) {
       if (err.name === "AbortError") {
-        setError("The server took too long to respond. The free-tier instance may be waking up. Please retry in 15 seconds.");
+        setError(
+          "The API did not answer within 60 seconds. The free-tier instance may still be waking up. Please retry."
+        );
       } else {
-        setError(err.message || "Failed to generate reply. Please try again.");
+        setError(err.message || "Failed to generate a reply. Please try again.");
       }
     } finally {
       setLoading(false);
     }
+  }, [emailContent, loading, tone]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    runGeneration();
   };
 
   return (
@@ -109,7 +120,15 @@ function App() {
           </Box>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+            <Alert
+              severity="error"
+              sx={{ mb: 3, borderRadius: 2 }}
+              action={
+                <Button color="inherit" size="small" onClick={runGeneration} disabled={loading}>
+                  Retry
+                </Button>
+              }
+            >
               {error}
             </Alert>
           )}
@@ -123,7 +142,12 @@ function App() {
             loading={loading}
           />
 
-          <ReplyViewer reply={generatedReply} />
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2, textAlign: "center" }}>
+            The API runs on a free tier, so the first request after a period of inactivity can take up to 30
+            seconds.
+          </Typography>
+
+          <ReplyViewer reply={generatedReply} modelUsed={modelUsed} />
         </Paper>
 
         <Box sx={{ mt: 3, textAlign: "center" }}>
