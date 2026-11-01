@@ -12,12 +12,16 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/email")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {
-        "https://gmail-genie-ai-nine.vercel.app",
-        "https://mail.google.com",
-        "http://localhost:5173",
-        "http://localhost:3000"
-}, allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS})
+@CrossOrigin(
+        origins = {
+                "https://gmail-genie-ai-nine.vercel.app",
+                "https://mail.google.com",
+                "http://localhost:5173",
+                "http://localhost:3000"
+        },
+        allowedHeaders = "*",
+        exposedHeaders = {"X-Model-Used", "X-RateLimit-Limit", "X-RateLimit-Remaining"},
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS})
 public class EmailGeneratorController {
 
     private final EmailGeneratorService emailGeneratorService;
