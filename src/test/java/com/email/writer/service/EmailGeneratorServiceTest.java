@@ -72,6 +72,17 @@ class EmailGeneratorServiceTest {
     }
 
     @Test
+    void trimsWhitespaceFromApiKeyBeforeSending() throws InterruptedException {
+        ReflectionTestUtils.setField(emailGeneratorService, "geminiApiKey", "  test-api-key\n");
+        mockWebServer.enqueue(ok("Sure thing."));
+
+        EmailResponse response = emailGeneratorService.generateEmailReply(request("Can we meet tomorrow?", "professional"));
+
+        assertEquals("Sure thing.", response.getReply());
+        assertEquals("test-api-key", mockWebServer.takeRequest().getRequestUrl().queryParameter("key"));
+    }
+
+    @Test
     void failsOverToSecondModelOn503() {
         mockWebServer.enqueue(new MockResponse().setResponseCode(503).setBody("overloaded"));
         mockWebServer.enqueue(ok("Tomorrow works."));

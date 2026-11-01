@@ -71,7 +71,11 @@ public class EmailGeneratorService {
     }
 
     public EmailResponse generateEmailReply(EmailRequest emailRequest) {
-        if (geminiApiKey == null || geminiApiKey.isBlank()) {
+        // Environment values pasted through a dashboard often carry a trailing newline,
+        // which the API rejects as an invalid key.
+        String apiKey = geminiApiKey == null ? "" : geminiApiKey.trim();
+
+        if (apiKey.isBlank()) {
             throw new ModelServiceException("Gemini API key is not configured on the server", HttpStatus.SERVICE_UNAVAILABLE);
         }
 
@@ -96,7 +100,7 @@ public class EmailGeneratorService {
             String model = models.get(attempt);
 
             try {
-                String responseBody = requestModel(model, requestBody);
+                String responseBody = requestModel(model, requestBody, apiKey);
                 String replyText = extractReplyText(responseBody);
 
                 if (replyText != null && !replyText.isBlank()) {
@@ -146,9 +150,9 @@ public class EmailGeneratorService {
                 HttpStatus.BAD_GATEWAY);
     }
 
-    private String requestModel(String model, Map<String, Object> requestBody) {
+    private String requestModel(String model, Map<String, Object> requestBody, String apiKey) {
         return webClient.post()
-                .uri(geminiApiBaseUrl + "/" + model + ":generateContent?key=" + geminiApiKey)
+                .uri(geminiApiBaseUrl + "/" + model + ":generateContent?key={apiKey}", apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .retrieve()
