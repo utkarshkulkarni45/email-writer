@@ -95,6 +95,18 @@ class EmailGeneratorServiceTest {
     }
 
     @Test
+    void failsOverToSecondModelOn404() {
+        mockWebServer.enqueue(new MockResponse().setResponseCode(404).setBody("model retired"));
+        mockWebServer.enqueue(ok("Happy to help."));
+
+        EmailResponse response = emailGeneratorService.generateEmailReply(request("Are you free tomorrow?", "friendly"));
+
+        assertEquals("Happy to help.", response.getReply());
+        assertEquals("model-b", response.getModelUsed());
+        assertEquals(2, mockWebServer.getRequestCount());
+    }
+
+    @Test
     void failsOverToSecondModelOn429() {
         mockWebServer.enqueue(new MockResponse().setResponseCode(429).setBody("quota exceeded"));
         mockWebServer.enqueue(ok("Happy to help."));

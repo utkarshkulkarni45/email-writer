@@ -43,11 +43,11 @@ public class EmailGeneratorService {
     @Value("${gemini.api.base-url:https://generativelanguage.googleapis.com/v1beta/models}")
     private String geminiApiBaseUrl;
 
-    @Value("${gemini.api.models:gemini-flash-latest,gemini-2.5-flash,gemini-2.5-flash-lite}")
+    @Value("${gemini.api.models:gemini-flash-latest,gemini-flash-lite-latest,gemini-3.5-flash}")
     private String modelList;
 
-    @Value("${gemini.api.request-timeout:10s}")
-    private Duration requestTimeout = Duration.ofSeconds(10);
+    @Value("${gemini.api.request-timeout:15s}")
+    private Duration requestTimeout = Duration.ofSeconds(15);
 
     @Autowired
     public EmailGeneratorService(WebClient.Builder webClientBuilder) {
@@ -162,7 +162,9 @@ public class EmailGeneratorService {
     }
 
     private boolean isFailoverStatus(int statusCode) {
-        return statusCode == 429 || statusCode == 503;
+        // 404 means this key can no longer reach the model (retired or renamed),
+        // which only applies to the current entry in the list.
+        return statusCode == 429 || statusCode == 503 || statusCode == 404;
     }
 
     private boolean isTimeout(Throwable throwable) {
