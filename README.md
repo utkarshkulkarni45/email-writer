@@ -1,6 +1,6 @@
 # GmailGenie AI
 
-**GmailGenie AI** generates context-aware email replies inside Gmail. A Manifest V3 Chrome extension and a React dashboard call a Spring Boot REST API that routes requests across several Google Gemini models, falling back automatically on 429/503 errors. Deployed on Render (API) and Vercel (dashboard).
+**GmailGenie AI** generates context-aware email replies inside Gmail. A Manifest V3 Chrome extension and a React dashboard call a Spring Boot REST API that routes requests across several Google Gemini models, falling back automatically on rate limits, overload, retired models, and timeouts. Deployed on Render (API) and Vercel (dashboard).
 
 <p align="center">
   <a href="https://github.com/utkarshkulkarni45/GmailGenie_AI/actions/workflows/ci.yml"><img src="https://github.com/utkarshkulkarni45/GmailGenie_AI/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
@@ -35,8 +35,8 @@ flowchart LR
     R[React dashboard] --> A
     X --> A[Spring Boot API<br/>validation + 10 requests/min per IP]
     A --> M1[gemini-flash-latest]
-    M1 -->|429 / 503 / timeout| M2[gemini-2.5-flash]
-    M2 -->|429 / 503 / timeout| M3[gemini-2.5-flash-lite]
+    M1 -->|429 / 503 / 404 / timeout| M2[gemini-flash-lite-latest]
+    M2 -->|429 / 503 / 404 / timeout| M3[gemini-3.5-flash]
     M1 --> O[Reply]
     M2 --> O
     M3 --> O
@@ -147,8 +147,8 @@ If the API runs somewhere other than Render, update the URL in `email-writer-ext
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `GEMINI_KEY` | none | Gemini API key (required) |
-| `GEMINI_MODELS` | `gemini-flash-latest,gemini-2.5-flash,gemini-2.5-flash-lite` | Comma-separated failover order |
-| `GEMINI_TIMEOUT` | `10s` | Per-model request timeout |
+| `GEMINI_MODELS` | `gemini-flash-latest,gemini-flash-lite-latest,gemini-3.5-flash` | Comma-separated failover order |
+| `GEMINI_TIMEOUT` | `15s` | Per-model request timeout |
 | `PORT` | `8080` | HTTP port |
 | `VITE_API_URL` | Render URL | Dashboard API base URL |
 
