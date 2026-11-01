@@ -34,6 +34,8 @@ export default function EmailInputForm({
         placeholder="Paste the email you received here..."
         required
         variant="outlined"
+        helperText={`${emailContent.length} / 5000 characters`}
+        slotProps={{ htmlInput: { maxLength: 5000 } }}
         sx={{
           "& .MuiOutlinedInput-root": {
             backgroundColor: "#fcfcfd",
@@ -62,11 +64,11 @@ export default function EmailInputForm({
           }}
         >
           <MenuItem value="">Default / Standard</MenuItem>
-          <MenuItem value="professional">💼 Professional</MenuItem>
-          <MenuItem value="friendly">😊 Friendly</MenuItem>
-          <MenuItem value="casual">☕ Casual</MenuItem>
-          <MenuItem value="persuasive">🎯 Persuasive</MenuItem>
-          <MenuItem value="urgent">⚡ Urgent & Direct</MenuItem>
+          <MenuItem value="professional">Professional</MenuItem>
+          <MenuItem value="friendly">Friendly</MenuItem>
+          <MenuItem value="casual">Casual</MenuItem>
+          <MenuItem value="persuasive">Persuasive</MenuItem>
+          <MenuItem value="urgent">Urgent and Direct</MenuItem>
         </Select>
       </FormControl>
 
@@ -88,7 +90,7 @@ export default function EmailInputForm({
         {loading ? (
           <CircularProgress size={24} sx={{ color: "#ffffff" }} />
         ) : (
-          "✨ Generate Reply"
+          "Generate Reply"
         )}
       </Button>
     </Box>

@@ -36,3 +36,10 @@ build/
 email-writer-react/node_modules/
 email-writer-react/dist/
 email-writer-react/.env.local
+
+# Local secrets and tooling output
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
