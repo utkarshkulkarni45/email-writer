@@ -8,4 +8,9 @@ email-writer-react/
 email-writer-extension/
 *.md
 .env*
+docs/
+*.gif
+*.mp4
+*.png
+*.zip
 
